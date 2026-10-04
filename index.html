@@ -41,13 +41,28 @@ button:active{transform:scale(.98)}
 button:focus-visible{outline:2px solid var(--ice);outline-offset:3px}
 button:disabled{opacity:.6}
 body[data-state="listening"] button,body[data-state="speaking"] button{background:rgba(255,255,255,.06);color:var(--ice);box-shadow:none;border:1px solid rgba(61,230,255,.5)}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:2;background:repeating-linear-gradient(0deg,rgba(61,230,255,.045) 0 1px,transparent 1px 3px)}
+body::after{content:"";position:fixed;left:-50%;right:-50%;bottom:0;height:42vh;pointer-events:none;z-index:0;opacity:.5;
+  background:linear-gradient(rgba(47,123,255,.4) 1px,transparent 1px) 0 0/100% 38px,linear-gradient(90deg,rgba(47,123,255,.4) 1px,transparent 1px) 0 0/48px 100%;
+  transform:perspective(300px) rotateX(62deg);transform-origin:bottom;-webkit-mask-image:linear-gradient(transparent,#000 70%);mask-image:linear-gradient(transparent,#000 70%);animation:grid 3s linear infinite}
+@keyframes grid{to{background-position:0 38px,0 0}}
+header,canvas,.bottom{position:relative;z-index:1}
+h1{animation:flick 5s infinite}
+@keyframes flick{0%,92%,100%{text-shadow:0 0 18px rgba(61,230,255,.6)}93%{text-shadow:3px 0 var(--blue),-3px 0 var(--cyan)}95%{text-shadow:-3px 0 var(--blue),3px 0 var(--cyan)}}
+.type{display:flex;gap:8px}
+.type input{flex:1;min-width:0;font:500 16px var(--font);color:var(--ice);background:rgba(8,28,84,.55);border:1px solid rgba(47,123,255,.45);border-radius:14px;padding:13px 14px;outline:none}
+.type input::placeholder{color:var(--dim)}
+.type input:focus{border-color:var(--cyan);box-shadow:0 0 14px rgba(61,230,255,.35)}
+.type button{width:52px;min-width:0;padding:0;font-size:22px;border-radius:14px}
+@media (prefers-reduced-motion:reduce){body::after,h1{animation:none}}
 </style>
 </head>
 <body data-state="idle">
 <header><h1>JARVIS</h1><span id="chip">Bereit</span></header>
 <canvas id="orb"></canvas>
 <div class="bottom">
-  <div id="log" aria-live="polite"><p class="hint">Tippe unten auf „Gespräch starten“.</p></div>
+  <div id="log" aria-live="polite"><p class="hint">Tippe auf „Gespräch starten“ oder schreibe Jarvis.</p></div>
+  <div class="type"><input id="msg" type="text" placeholder="Schreibe Jarvis …" autocomplete="off" enterkeyhint="send"><button id="send" type="button" aria-label="Senden">↑</button></div>
   <button id="btn" type="button">Gespräch starten</button>
 </div>
 
@@ -56,7 +71,7 @@ import { Conversation } from "https://cdn.jsdelivr.net/npm/@elevenlabs/client/+e
 
 const AGENT_ID = "agent_0101m43qkcwae9r8jvbq9xfyrtmb";
 const btn = document.getElementById("btn"), chip = document.getElementById("chip"), log = document.getElementById("log");
-let conv = null, state = "idle";
+let conv = null, state = "idle", pending = null, lastTyped = null, pulses = [];
 
 function setState(s, label) { state = s; document.body.dataset.state = s; chip.textContent = label; }
 function addLine(cls, text) {
@@ -74,16 +89,19 @@ function unlockAudio() {
   try { new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=").play().catch(() => {}); } catch (e) {}
 }
 
-btn.addEventListener("click", async () => {
+async function start() {
   if (conv) { await conv.endSession(); return; }
   unlockAudio(); setState("connecting", "Verbinde …"); btn.disabled = true;
   try {
     conv = await Conversation.startSession({
       agentId: AGENT_ID, connectionType: "webrtc",
-      onConnect: () => { setState("listening", "Höre zu"); btn.textContent = "Gespräch beenden"; btn.disabled = false; },
+      onConnect: () => {
+        setState("listening", "Höre zu"); btn.textContent = "Gespräch beenden"; btn.disabled = false;
+        if (pending) { const t = pending; pending = null; setTimeout(() => { try { conv && conv.sendUserMessage(t); } catch (e) {} }, 800); }
+      },
       onDisconnect: () => { reset(); setState("idle", "Bereit"); },
       onModeChange: ({ mode }) => mode === "speaking" ? setState("speaking", "Spricht") : setState("listening", "Höre zu"),
-      onMessage: ({ source, message }) => { if (message) addLine(source === "ai" ? "ai" : "me", message); },
+      onMessage: ({ source, message }) => { if (!message) return; if (source !== "ai" && message === lastTyped) { lastTyped = null; return; } addLine(source === "ai" ? "ai" : "me", message); },
       onError: (m) => { reset(); setState("idle", "Fehler"); addLine("err", "Fehler: " + (m && m.message ? m.message : m)); }
     });
   } catch (e) {
@@ -92,7 +110,19 @@ btn.addEventListener("click", async () => {
     addLine("err", denied ? "Mikrofon blockiert. Erlaube es in Safari unter „Einstellungen für diese Website“ und lade neu."
                           : "Keine Verbindung zu Jarvis: " + (e && e.message ? e.message : e));
   }
-});
+}
+btn.addEventListener("click", start);
+
+const msg = document.getElementById("msg");
+function sendText() {
+  const t = msg.value.trim(); if (!t) return;
+  msg.value = ""; lastTyped = t; addLine("me", t);
+  if (conv) { try { conv.sendUserMessage(t); } catch (e) {} }
+  else if (btn.disabled) { pending = t; }
+  else { pending = t; start(); }
+}
+document.getElementById("send").addEventListener("click", sendText);
+msg.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); sendText(); } });
 
 // Leuchtende Kugel
 const cv = document.getElementById("orb"), g = cv.getContext("2d");
@@ -110,7 +140,7 @@ function frame() {
   const target = base + (vol || 0) * 1.2 + (state === "speaking" ? Math.sin(t * .15) * .08 : 0);
   amp += (target - amp) * .12;
   g.clearRect(0, 0, W, H);
-  const cx = W / 2, cy = H / 2, R = Math.min(W, H) * .27 * (1 + amp * .35);
+  const cx = W / 2, cy = H / 2, R = Math.min(W, H) * .2 * (1 + amp * .35);
   const glow = g.createRadialGradient(cx, cy, R * .1, cx, cy, R * 2.3);
   glow.addColorStop(0, "rgba(61,230,255," + (.35 + amp * .5) + ")"); glow.addColorStop(.45, "rgba(47,123,255,.22)"); glow.addColorStop(1, "rgba(3,11,31,0)");
   g.fillStyle = glow; g.fillRect(0, 0, W, H);
@@ -131,6 +161,26 @@ function frame() {
     g.fillStyle = "rgba(190,240,255," + (.25 + d.z * .6) + ")";
     g.beginPath(); g.arc(cx + Math.cos(d.a) * r, cy + Math.sin(d.a) * r, .7 + d.z * 1.5, 0, 6.2832); g.fill();
   }
+  g.save(); g.translate(cx, cy); g.rotate(t * .004 * (1 + amp * 3));
+  const TR = R * 1.55;
+  for (let i = 0; i < 72; i++) {
+    const a = i / 72 * 6.2832, l = i % 6 === 0 ? R * .14 : R * .06;
+    g.strokeStyle = "rgba(61,230,255," + (i % 6 === 0 ? .8 : .35) + ")";
+    g.beginPath(); g.moveTo(Math.cos(a) * TR, Math.sin(a) * TR); g.lineTo(Math.cos(a) * (TR + l), Math.sin(a) * (TR + l)); g.stroke();
+  }
+  g.restore();
+  for (let k = 0; k < 3; k++) {
+    g.strokeStyle = "rgba(47,123,255," + (.9 - k * .2) + ")"; g.lineWidth = 2.5 - k * .6;
+    const a0 = t * (.012 + k * .007) * (k % 2 ? -1 : 1) + k * 2;
+    g.beginPath(); g.arc(cx, cy, R * (1.95 + k * .22) * (1 + amp * .08), a0, a0 + 1.1 + amp); g.stroke();
+  }
+  if (state === "speaking" && t % 20 === 0) pulses.push(0);
+  for (let i = pulses.length - 1; i >= 0; i--) {
+    const p = pulses[i] += .014; if (p > 1) { pulses.splice(i, 1); continue; }
+    g.strokeStyle = "rgba(61,230,255," + (.7 * (1 - p)) + ")"; g.lineWidth = 2;
+    g.beginPath(); g.arc(cx, cy, R * (.7 + p * 1.9), 0, 6.2832); g.stroke();
+  }
+  g.lineWidth = 1.5;
   const core = g.createRadialGradient(cx, cy, 0, cx, cy, R * .5);
   core.addColorStop(0, "#fff"); core.addColorStop(.35, "#7ff0ff"); core.addColorStop(1, "rgba(47,123,255,0)");
   g.fillStyle = core; g.beginPath(); g.arc(cx, cy, R * .5, 0, 6.2832); g.fill();
