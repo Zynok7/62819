@@ -7,150 +7,136 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Jarvis">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#10261f">
+<meta name="theme-color" content="#030b1f">
 <title>Jarvis</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Jost:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{
-  --baize:#10261f; --baize-deep:#0a1814; --brass:#c9a45c; --brass-soft:#8f7440;
-  --ivory:#efe8d8; --mute:#a9b3a6;
-  --serif:"Cormorant Garamond",Georgia,serif; --sans:"Jost",system-ui,-apple-system,sans-serif;
-}
+:root{--bg:#030b1f;--blue:#2f7bff;--cyan:#3de6ff;--ice:#dff6ff;--dim:#7fa3d6;--font:"Chakra Petch",system-ui,sans-serif}
 *{box-sizing:border-box;margin:0}
 html,body{height:100%}
-body{
-  background:radial-gradient(120% 90% at 50% 38%,var(--baize) 0%,var(--baize-deep) 100%);
-  color:var(--ivory);font-family:var(--sans);
-  display:flex;flex-direction:column;align-items:center;justify-content:space-between;
-  padding:calc(env(safe-area-inset-top,0px) + 56px) 24px calc(env(safe-area-inset-bottom,0px) + 40px);
-  text-align:center;overflow:hidden;
-}
-h1{font-family:var(--serif);font-weight:600;font-size:clamp(44px,12vw,64px);letter-spacing:.04em;color:var(--ivory)}
-.sub{font-family:var(--serif);font-size:20px;color:var(--brass);margin-top:6px}
-
-.stage{position:relative;width:min(72vw,280px);aspect-ratio:1;display:grid;place-items:center}
-.ring{position:absolute;inset:0;border-radius:50%;border:1.5px solid var(--brass)}
-.ring.r2{inset:14%;border-color:var(--brass-soft)}
-.ring.r3{inset:28%;border-color:var(--brass-soft);opacity:.6}
-.core{width:30%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 30%,#e6c98a,var(--brass) 55%,var(--brass-soft));
-  box-shadow:0 0 40px rgba(201,164,92,.25)}
-
-body[data-state="connecting"] .ring{border-style:dashed;animation:spin 6s linear infinite}
-body[data-state="connecting"] .ring.r2{animation-direction:reverse}
-body[data-state="listening"] .ring{animation:breathe 4s ease-in-out infinite}
-body[data-state="listening"] .ring.r2{animation-delay:.4s}
-body[data-state="listening"] .ring.r3{animation-delay:.8s}
-body[data-state="speaking"] .core{animation:glow 1.1s ease-in-out infinite}
-body[data-state="speaking"] .ring{animation:ripple 1.6s ease-out infinite}
-body[data-state="speaking"] .ring.r2{animation-delay:.25s}
-body[data-state="speaking"] .ring.r3{animation-delay:.5s}
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
-@keyframes glow{0%,100%{transform:scale(1)}50%{transform:scale(1.14)}}
-@keyframes ripple{0%{transform:scale(.94);opacity:1}100%{transform:scale(1.12);opacity:.15}}
-@media (prefers-reduced-motion:reduce){*{animation:none!important}}
-
-.bottom{display:flex;flex-direction:column;align-items:center;gap:22px;width:100%}
-#status{font-family:var(--serif);font-size:24px;min-height:34px;max-width:30ch}
-#said{font-family:var(--serif);font-size:18px;color:var(--mute);max-width:32ch;min-height:48px;line-height:1.35}
-#status.err{font-family:var(--sans);font-size:15px;color:#e8b4a0;line-height:1.45}
-button{
-  font:500 17px var(--sans);letter-spacing:.02em;color:var(--baize-deep);background:var(--brass);
-  border:0;border-radius:999px;padding:16px 34px;min-width:230px;cursor:pointer;
-  transition:background .2s,transform .1s;
-}
-button:active{transform:scale(.97)}
-button:focus-visible{outline:2px solid var(--ivory);outline-offset:3px}
+body{background:radial-gradient(90% 60% at 50% 35%,#0a2160 0%,var(--bg) 70%);color:var(--ice);font-family:var(--font);
+  display:flex;flex-direction:column;overflow:hidden;
+  padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
+header{padding:22px 24px 0;display:flex;justify-content:space-between;align-items:center}
+h1{font-weight:700;font-size:30px;letter-spacing:.14em;text-shadow:0 0 18px rgba(61,230,255,.6)}
+#chip{font-size:14px;color:var(--cyan);border:1px solid rgba(61,230,255,.4);border-radius:999px;padding:6px 14px;
+  background:rgba(61,230,255,.08);transition:all .3s}
+body[data-state="speaking"] #chip{background:var(--cyan);color:var(--bg)}
+canvas{flex:1;width:100%;min-height:0;display:block}
+.bottom{padding:0 18px 18px;display:flex;flex-direction:column;gap:14px}
+#log{height:min(30vh,230px);overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:18px;
+  background:rgba(8,28,84,.55);border:1px solid rgba(47,123,255,.45);box-shadow:0 0 30px rgba(47,123,255,.18) inset;
+  scrollbar-width:none}
+#log::-webkit-scrollbar{display:none}
+#log p{font-size:17px;line-height:1.35;max-width:88%;padding:9px 13px;border-radius:14px}
+#log .ai{align-self:flex-start;background:rgba(61,230,255,.14);border:1px solid rgba(61,230,255,.35)}
+#log .me{align-self:flex-end;background:rgba(47,123,255,.3);color:#cfe3ff}
+#log .hint{align-self:center;max-width:100%;background:none;color:var(--dim);text-align:center;padding:0}
+#log .err{align-self:center;max-width:100%;background:rgba(255,90,90,.15);color:#ffc2c2}
+button{font:600 18px var(--font);letter-spacing:.08em;color:#02112e;background:linear-gradient(135deg,var(--cyan),var(--blue));
+  border:0;border-radius:16px;padding:17px;width:100%;cursor:pointer;box-shadow:0 0 26px rgba(61,230,255,.45);transition:transform .1s}
+button:active{transform:scale(.98)}
+button:focus-visible{outline:2px solid var(--ice);outline-offset:3px}
 button:disabled{opacity:.6}
-body[data-state="listening"] button,body[data-state="speaking"] button{background:transparent;color:var(--ivory);border:1.5px solid var(--brass-soft)}
+body[data-state="listening"] button,body[data-state="speaking"] button{background:rgba(255,255,255,.06);color:var(--ice);box-shadow:none;border:1px solid rgba(61,230,255,.5)}
 </style>
 </head>
 <body data-state="idle">
-<header>
-  <h1>Jarvis</h1>
-  <p class="sub">Zu Ihren Diensten</p>
-</header>
-
-<div class="stage" aria-hidden="true">
-  <div class="ring"></div><div class="ring r2"></div><div class="ring r3"></div><div class="core"></div>
-</div>
-
+<header><h1>JARVIS</h1><span id="chip">Bereit</span></header>
+<canvas id="orb"></canvas>
 <div class="bottom">
-  <p id="status" role="status" aria-live="polite">Zu Diensten.</p>
-  <p id="said" aria-live="polite"></p>
-  <button id="btn" type="button">Gespräch beginnen</button>
+  <div id="log" aria-live="polite"><p class="hint">Tippe unten auf „Gespräch starten“.</p></div>
+  <button id="btn" type="button">Gespräch starten</button>
 </div>
 
 <script type="module">
 import { Conversation } from "https://cdn.jsdelivr.net/npm/@elevenlabs/client/+esm";
 
 const AGENT_ID = "agent_0101m43qkcwae9r8jvbq9xfyrtmb";
-const btn = document.getElementById("btn");
-const statusEl = document.getElementById("status");
-let conv = null;
+const btn = document.getElementById("btn"), chip = document.getElementById("chip"), log = document.getElementById("log");
+let conv = null, state = "idle";
 
-function setState(state, text, isErr = false) {
-  document.body.dataset.state = state;
-  statusEl.textContent = text;
-  statusEl.classList.toggle("err", isErr);
+function setState(s, label) { state = s; document.body.dataset.state = s; chip.textContent = label; }
+function addLine(cls, text) {
+  const hint = log.querySelector(".hint"); if (hint) hint.remove();
+  const p = document.createElement("p"); p.className = cls; p.textContent = text;
+  log.appendChild(p); while (log.children.length > 30) log.firstChild.remove();
+  log.scrollTop = log.scrollHeight;
 }
-function reset() {
-  conv = null;
-  btn.textContent = "Gespräch beginnen";
-  btn.disabled = false;
-}
+function reset() { conv = null; btn.textContent = "Gespräch starten"; btn.disabled = false; }
 
-const said = document.getElementById("said");
-
-// iOS: Audio muss innerhalb des Tippens freigeschaltet werden (auch bei Stumm-Schalter).
+// iOS: Ton innerhalb des Tippens freischalten (auch bei Stumm-Schalter)
 function unlockAudio() {
-  try {
-    const AC = window.AudioContext || window.webkitAudioContext;
-    const ctx = new AC(); ctx.resume();
-    const src = ctx.createBufferSource();
-    src.buffer = ctx.createBuffer(1, 1, 22050);
-    src.connect(ctx.destination); src.start(0);
-  } catch (e) {}
-  try {
-    const a = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=");
-    a.play().catch(() => {});
-  } catch (e) {}
+  try { const C = window.AudioContext || window.webkitAudioContext, c = new C(); c.resume();
+    const s = c.createBufferSource(); s.buffer = c.createBuffer(1, 1, 22050); s.connect(c.destination); s.start(0); } catch (e) {}
+  try { new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=").play().catch(() => {}); } catch (e) {}
 }
 
 btn.addEventListener("click", async () => {
   if (conv) { await conv.endSession(); return; }
-  unlockAudio();
-  said.textContent = "";
-  setState("connecting", "Einen Moment bitte …");
-  btn.disabled = true;
+  unlockAudio(); setState("connecting", "Verbinde …"); btn.disabled = true;
   try {
     conv = await Conversation.startSession({
-      agentId: AGENT_ID,
-      connectionType: "webrtc",
-      onConnect: () => {
-        setState("listening", "Ich höre zu.");
-        btn.textContent = "Gespräch beenden";
-        btn.disabled = false;
-      },
-      onDisconnect: () => { reset(); setState("idle", "Zu Diensten."); },
-      onModeChange: ({ mode }) => {
-        if (mode === "speaking") setState("speaking", "Jarvis spricht.");
-        else setState("listening", "Ich höre zu.");
-      },
-      onMessage: ({ source, message }) => { if (source === "ai") said.textContent = message; },
-      onError: (m) => { reset(); setState("idle", "Fehler: " + (m && m.message ? m.message : m), true); }
+      agentId: AGENT_ID, connectionType: "webrtc",
+      onConnect: () => { setState("listening", "Höre zu"); btn.textContent = "Gespräch beenden"; btn.disabled = false; },
+      onDisconnect: () => { reset(); setState("idle", "Bereit"); },
+      onModeChange: ({ mode }) => mode === "speaking" ? setState("speaking", "Spricht") : setState("listening", "Höre zu"),
+      onMessage: ({ source, message }) => { if (message) addLine(source === "ai" ? "ai" : "me", message); },
+      onError: (m) => { reset(); setState("idle", "Fehler"); addLine("err", "Fehler: " + (m && m.message ? m.message : m)); }
     });
-    if (conv.setVolume) conv.setVolume({ volume: 1 });
   } catch (e) {
-    reset();
+    reset(); setState("idle", "Fehler");
     const denied = e && (e.name === "NotAllowedError" || e.name === "SecurityError");
-    setState("idle", denied
-      ? "Das Mikrofon ist blockiert. Erlaube es in Safari unter „Einstellungen für diese Website“ und lade die Seite neu."
-      : "Keine Verbindung zu Jarvis: " + (e && e.message ? e.message : e), true);
+    addLine("err", denied ? "Mikrofon blockiert. Erlaube es in Safari unter „Einstellungen für diese Website“ und lade neu."
+                          : "Keine Verbindung zu Jarvis: " + (e && e.message ? e.message : e));
   }
 });
+
+// Leuchtende Kugel
+const cv = document.getElementById("orb"), g = cv.getContext("2d");
+const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let W, H, dpr, amp = 0, t = 0;
+function resize() { dpr = devicePixelRatio || 1; W = cv.clientWidth; H = cv.clientHeight; cv.width = W * dpr; cv.height = H * dpr; g.setTransform(dpr, 0, 0, dpr, 0, 0); }
+addEventListener("resize", resize); resize();
+const dots = Array.from({ length: 220 }, () => ({ a: Math.random() * 6.283, r: .55 + Math.random() * .75, s: (Math.random() - .5) * .006, z: Math.random() }));
+
+function frame() {
+  t += 1;
+  let vol = 0;
+  if (conv) { try { vol = state === "speaking" ? conv.getOutputVolume() : conv.getInputVolume(); } catch (e) {} }
+  const base = state === "speaking" ? .5 : state === "listening" ? .18 : state === "connecting" ? .3 : .08;
+  const target = base + (vol || 0) * 1.2 + (state === "speaking" ? Math.sin(t * .15) * .08 : 0);
+  amp += (target - amp) * .12;
+  g.clearRect(0, 0, W, H);
+  const cx = W / 2, cy = H / 2, R = Math.min(W, H) * .27 * (1 + amp * .35);
+  const glow = g.createRadialGradient(cx, cy, R * .1, cx, cy, R * 2.3);
+  glow.addColorStop(0, "rgba(61,230,255," + (.35 + amp * .5) + ")"); glow.addColorStop(.45, "rgba(47,123,255,.22)"); glow.addColorStop(1, "rgba(3,11,31,0)");
+  g.fillStyle = glow; g.fillRect(0, 0, W, H);
+  g.lineWidth = 1.5;
+  for (let i = 0; i < 4; i++) {
+    g.strokeStyle = "rgba(" + (i % 2 ? "47,123,255" : "61,230,255") + "," + (.7 - i * .12) + ")";
+    g.beginPath();
+    for (let a = 0; a <= 6.2832; a += .06) {
+      const w = Math.sin(a * (3 + i) + t * (.03 + i * .01) * (i % 2 ? -1 : 1)) * R * .09 * (.4 + amp * 2.2);
+      const r = R * (.55 + i * .17) + w, x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r;
+      a === 0 ? g.moveTo(x, y) : g.lineTo(x, y);
+    }
+    g.closePath(); g.stroke();
+  }
+  for (const d of dots) {
+    if (!still) d.a += d.s * (1 + amp * 6);
+    const r = R * d.r * (1 + amp * .25 * d.z);
+    g.fillStyle = "rgba(190,240,255," + (.25 + d.z * .6) + ")";
+    g.beginPath(); g.arc(cx + Math.cos(d.a) * r, cy + Math.sin(d.a) * r, .7 + d.z * 1.5, 0, 6.2832); g.fill();
+  }
+  const core = g.createRadialGradient(cx, cy, 0, cx, cy, R * .5);
+  core.addColorStop(0, "#fff"); core.addColorStop(.35, "#7ff0ff"); core.addColorStop(1, "rgba(47,123,255,0)");
+  g.fillStyle = core; g.beginPath(); g.arc(cx, cy, R * .5, 0, 6.2832); g.fill();
+  requestAnimationFrame(frame);
+}
+frame();
 </script>
 </body>
 </html>
