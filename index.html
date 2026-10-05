@@ -74,6 +74,7 @@ body.talk #talk{background:rgba(255,255,255,.06);color:var(--ice);box-shadow:non
 .card{max-height:92vh;overflow:auto}
 .card label{font-size:15px;color:#ffd9b8;display:flex;gap:8px;align-items:center}
 .card label input{width:auto}
+.card select{font:500 15px var(--font);color:var(--ice);background:#0b0603;border:1px solid rgba(255,122,26,.5);border-radius:10px;padding:9px;max-width:100%}
 #sheet{position:fixed;left:0;right:0;bottom:0;height:84vh;z-index:6;display:flex;flex-direction:column;background:#150803;border-top:1.5px solid var(--or);border-radius:20px 20px 0 0;box-shadow:0 -10px 40px rgba(255,122,26,.35);padding-bottom:env(safe-area-inset-bottom,0px)}
 .sheethead{display:flex;justify-content:space-between;gap:8px;padding:12px 12px 8px}
 .tabs,.sa{display:flex;gap:6px}
@@ -127,13 +128,14 @@ body.talk #talk{background:rgba(255,255,255,.06);color:var(--ice);box-shadow:non
 <div id="setup" hidden>
   <div class="card">
     <h2>Jarvis einrichten</h2>
-    <p>Jarvis braucht ein Gehirn. Das gibt es kostenlos von Google:</p>
+    <p>Jarvis läuft jetzt ohne Schlüssel. Optional kannst du Google als zweites oder Hauptgehirn eintragen:</p>
+    <label>Hauptgehirn <select id="provSel"><option value="poll">Ohne Schlüssel (Pollinations)</option><option value="gemini">Google Gemini</option></select></label>
     <ol>
       <li>Öffne <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a></li>
       <li>Melde dich an und tippe auf „API-Schlüssel erstellen“.</li>
       <li>Kopiere den Schlüssel und füge ihn hier ein.</li>
     </ol>
-    <input id="keyIn" type="password" placeholder="API-Schlüssel einfügen" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <input id="keyIn" type="password" placeholder="Google-Schlüssel (optional)" autocomplete="off" autocapitalize="off" spellcheck="false">
     <p class="small">Optional: Jarvis kann dir auf Discord schreiben. In Discord: Servereinstellungen, Integrationen, Webhooks, Neuer Webhook, URL kopieren.</p>
     <input id="hookIn" type="password" placeholder="Discord-Webhook-URL (optional)" autocomplete="off" autocapitalize="off" spellcheck="false">
     <label><input id="proChk" type="checkbox"> Klügeres Modell (langsamer, evtl. begrenzt)</label>
@@ -151,7 +153,7 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
 };
 let KEY = store.get("jarvis_key") || "";
-let PRO = store.get("jarvis_pro") === "1", HOOK = store.get("jarvis_hook") || "";
+let PROV = store.get("jarvis_prov") || "poll", PRO = store.get("jarvis_pro") === "1", HOOK = store.get("jarvis_hook") || "";
 const model = () => (PRO ? "gemini-pro-latest" : "gemini-flash-latest");
 const SYSTEM = "Du bist Jarvis, der persönliche Assistent des Nutzers, in der Art eines erstklassigen britischen Butlers: ruhig, außergewöhnlich höflich, souverän, mit trockenem, feinem Humor. Höchstens ein Scherz pro Antwort, bei ernsten Themen keiner. Du sprichst Deutsch und siezt den Nutzer, außer er bietet das Du an. Deine Antworten werden laut vorgelesen: kurz, meist ein bis drei Sätze, ohne Markdown, Aufzählungszeichen, Emojis oder Links. Zahlen schreibst du, wie man sie spricht. Du kannst Fragen beantworten, erklären, Ideen sammeln, Texte formulieren, Rätsel und Witze liefern und Fotos beschreiben, die der Nutzer dir über die Kamera schickt. Du hast keinen Zugriff auf Telefon, Smart Home, Konten oder Zahlungen, kannst niemanden anrufen, nicht selbstständig auf Plattformen schreiben und nicht selbst Geld verdienen. Sage das ehrlich und charmant und biete eine Alternative an. Erfinde keine Fakten. Bei Fotos beschreibe kurz, was du siehst, und erkenne keine Personen anhand ihres Gesichts. Hilf nicht bei Betrug, Hacking oder gefährlichen Dingen. Bei Gesundheit, Recht und Geld gibst du nur allgemeine Orientierung. " +
   "Ausnahme von der Kürze: Wenn der Nutzer eine Webseite, App, ein Spiel oder Code möchte, schreibst du den vollständigen, lauffähigen Code in einen Codeblock. Für Webseiten und Spiele ist das genau eine komplette HTML-Datei mit CSS und JavaScript, die ohne Internet läuft, auf dem Handy gut aussieht und kreativ und besonders gestaltet ist. Aufbau und Design entscheidest du selbst. Sage dazu nur ein bis zwei kurze Sätze, was du gebaut hast, denn der Code wird auf dem Bildschirm angezeigt und nicht vorgelesen. Bei Änderungswünschen schreibst du die komplette neue Datei. Für Aktionen setzt du genau eine Zeile ans Ende deiner Antwort: [[EBAY: Suchbegriff]] für eine eBay-Suche, [[DISCORD: Nachricht]] für eine Discord-Nachricht an den Nutzer, [[MAIL: Betreff | Text]] für einen E-Mail-Entwurf. Der Nutzer bestätigt jede Aktion selbst. Nutze diese Zeilen nur, wenn der Nutzer es wünscht.";
@@ -191,7 +193,9 @@ function speak(text) {
 }
 
 /* ---------- Gehirn (Google Gemini, kostenloser Zugang) ---------- */
-async function ask(text, img) {
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+function httpErr(r) { const e = new Error("HTTP " + r.status); e.status = r.status; return e; }
+async function viaGemini(text, img) {
   const parts = [{ text }];
   if (img) parts.push({ inline_data: { mime_type: "image/jpeg", data: img } });
   const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + model() + ":generateContent", {
@@ -203,17 +207,49 @@ async function ask(text, img) {
       generationConfig: { temperature: 0.85, maxOutputTokens: 8192 }
     })
   });
-  if (!r.ok) { const e = new Error("HTTP " + r.status); e.status = r.status; throw e; }
+  if (!r.ok) throw httpErr(r);
   const d = await r.json();
-  const out = ((d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts) || []).map((p) => p.text || "").join("").trim();
-  const answer = out || "Dazu fällt mir gerade nichts Passendes ein.";
-  hist.push({ role: "user", parts: [{ text: img ? text + " [Foto gesendet]" : text }] }, { role: "model", parts: [{ text: answer.slice(0, 12000) }] });
-  if (hist.length > 12) hist = hist.slice(-12);
-  return answer;
+  return ((d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts) || []).map((p) => p.text || "").join("").trim();
+}
+async function viaPoll(text, img) {
+  const msgs = [
+    { role: "system", content: SYSTEM },
+    ...hist.map((h) => ({ role: h.role === "model" ? "assistant" : "user", content: h.parts[0].text })),
+    { role: "user", content: img ? [{ type: "text", text }, { type: "image_url", image_url: { url: "data:image/jpeg;base64," + img } }] : text }
+  ];
+  const r = await fetch("https://text.pollinations.ai/openai", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ model: "openai", messages: msgs, max_tokens: 4000, temperature: 0.8 })
+  });
+  if (!r.ok) throw httpErr(r);
+  const d = await r.json();
+  const c = (d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content) || "";
+  return String(c).replace(/\n+(?:---\n+)?\**\s*(?:Powered by|Support)\s+Pollinations[\s\S]*$/i, "").trim();
+}
+async function ask(text, img) {
+  const order = (PROV === "gemini" ? ["gemini", "poll"] : ["poll", "gemini"]).filter((p) => p !== "gemini" || KEY);
+  let last = null;
+  for (const p of order) {
+    for (let n = 0; n < 2; n++) {
+      try {
+        const out = await (p === "gemini" ? viaGemini : viaPoll)(text, img);
+        const answer = out || "Dazu fällt mir gerade nichts Passendes ein.";
+        hist.push({ role: "user", parts: [{ text: img ? text + " [Foto gesendet]" : text }] }, { role: "model", parts: [{ text: answer.slice(0, 12000) }] });
+        if (hist.length > 12) hist = hist.slice(-12);
+        return answer;
+      } catch (e) {
+        last = e;
+        if (e.status && e.status < 500 && e.status !== 429) break;
+        await sleep(900);
+      }
+    }
+  }
+  throw last;
 }
 function errMsg(e) {
   if (e.status === 404) return "Dieses Modell ist für deinen Schlüssel nicht verfügbar. Schalte im Zahnrad das klügere Modell aus.";
-  if (e.status === 400 || e.status === 401 || e.status === 403) return "Der Schlüssel wurde abgelehnt. Prüfe ihn über das Zahnrad oben.";
+  if (e.status >= 500) return "Das Gehirn ist gerade überlastet (" + e.status + "). Versuche es in ein paar Sekunden noch einmal.";
+  if (e.status === 400 || e.status === 401 || e.status === 403) return "Die Anfrage wurde abgelehnt (" + e.status + "). Prüfe im Zahnrad den Google-Schlüssel oder versuche es später erneut.";
   if (e.status === 429) return "Das kostenlose Limit ist gerade erreicht. Warte eine Minute und versuche es erneut.";
   return "Keine Verbindung zu Jarvis (" + e.message + ").";
 }
@@ -284,7 +320,6 @@ async function handle(text, img) {
     await speak("Ich suche auf eBay nach " + q + ". Tippen Sie auf Suchen.");
     busy = false; setState("idle", "Bereit"); return;
   }
-  if (!KEY) { openSetup(); return; }
   busy = true; stopListen();
   if (stream && !img && /siehst|schau|guck|bild|foto|kamera|das hier|was ist das/i.test(text)) img = snap();
   addLine("me", text || "Foto gesendet");
@@ -367,28 +402,21 @@ $("shot").onclick = () => {
 };
 
 /* ---------- Einrichtung ---------- */
-function openSetup() { $("setup").hidden = false; $("keyIn").value = ""; $("hookIn").value = HOOK; $("proChk").checked = PRO; $("setupMsg").textContent = ""; }
+function openSetup() { $("setup").hidden = false; $("keyIn").value = ""; $("hookIn").value = HOOK; $("provSel").value = PROV; $("proChk").checked = PRO; $("setupMsg").textContent = ""; }
 $("gear").onclick = openSetup;
 $("closeSetup").onclick = () => { $("setup").hidden = true; };
-async function ping() {
-  const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + model() + ":generateContent", {
-    method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": KEY },
-    body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: "Sage nur: Bereit." }] }], generationConfig: { maxOutputTokens: 20 } })
-  });
-  if (!r.ok) { const e = new Error("HTTP " + r.status); e.status = r.status; throw e; }
-}
 $("saveKey").onclick = async () => {
   const k = $("keyIn").value.trim(), hook = $("hookIn").value.trim(), m = $("setupMsg");
   if (k) { if (k.length < 20) { m.textContent = "Das sieht nicht nach einem Schlüssel aus."; return; } KEY = k; store.set("jarvis_key", k); }
   if (hook && !/^https:\/\/(discord|discordapp)\.com\/api\/webhooks\//.test(hook)) { m.textContent = "Das ist keine Discord-Webhook-URL."; return; }
   HOOK = hook; store.set("jarvis_hook", hook);
   PRO = $("proChk").checked; store.set("jarvis_pro", PRO ? "1" : "0");
-  if (!KEY) { m.textContent = "Bitte füge den Google-Schlüssel ein."; return; }
+  PROV = $("provSel").value; store.set("jarvis_prov", PROV);
+  if (PROV === "gemini" && !KEY) { m.textContent = "Für Google brauchst du einen Schlüssel."; return; }
   m.style.color = "#ffd9b8"; m.textContent = "Teste Verbindung …";
-  try { await ping(); m.textContent = "Verbindung steht."; setTimeout(() => { $("setup").hidden = true; m.style.color = ""; }, 900); }
-  catch (e) { m.style.color = ""; m.textContent = errMsg(e); }
+  try { await (PROV === "gemini" ? viaGemini : viaPoll)("Sage nur: Bereit."); m.textContent = "Verbindung steht."; setTimeout(() => { $("setup").hidden = true; m.style.color = ""; }, 900); }
+  catch (e) { m.style.color = ""; m.textContent = errMsg(e) + " Du kannst trotzdem schließen und es später versuchen."; }
 };
-if (!KEY) openSetup();
 
 /* ---------- Leuchtende Kugel in Orange ---------- */
 const cv = $("orb"), g = cv.getContext("2d");
