@@ -7,183 +7,356 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Jarvis">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#030b1f">
+<meta name="theme-color" content="#0b0603">
 <title>Jarvis</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#030b1f;--blue:#2f7bff;--cyan:#3de6ff;--ice:#dff6ff;--dim:#7fa3d6;--font:"Chakra Petch",system-ui,sans-serif}
+:root{--bg:#0b0603;--or:#ff7a1a;--am:#ffb347;--hot:#ff4d00;--ice:#fff1e3;--dim:#c79a74;--font:"Chakra Petch",system-ui,sans-serif}
 *{box-sizing:border-box;margin:0}
+[hidden]{display:none!important}
 html,body{height:100%}
-body{background:radial-gradient(90% 60% at 50% 35%,#0a2160 0%,var(--bg) 70%);color:var(--ice);font-family:var(--font);
-  display:flex;flex-direction:column;overflow:hidden;
-  padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
-header{padding:22px 24px 0;display:flex;justify-content:space-between;align-items:center}
-h1{font-weight:700;font-size:30px;letter-spacing:.14em;text-shadow:0 0 18px rgba(61,230,255,.6)}
-#chip{font-size:14px;color:var(--cyan);border:1px solid rgba(61,230,255,.4);border-radius:999px;padding:6px 14px;
-  background:rgba(61,230,255,.08);transition:all .3s}
-body[data-state="speaking"] #chip{background:var(--cyan);color:var(--bg)}
-canvas{flex:1;width:100%;min-height:0;display:block}
-.bottom{padding:0 18px 18px;display:flex;flex-direction:column;gap:14px}
-#log{height:min(30vh,230px);overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:18px;
-  background:rgba(8,28,84,.55);border:1px solid rgba(47,123,255,.45);box-shadow:0 0 30px rgba(47,123,255,.18) inset;
-  scrollbar-width:none}
-#log::-webkit-scrollbar{display:none}
-#log p{font-size:17px;line-height:1.35;max-width:88%;padding:9px 13px;border-radius:14px}
-#log .ai{align-self:flex-start;background:rgba(61,230,255,.14);border:1px solid rgba(61,230,255,.35)}
-#log .me{align-self:flex-end;background:rgba(47,123,255,.3);color:#cfe3ff}
-#log .hint{align-self:center;max-width:100%;background:none;color:var(--dim);text-align:center;padding:0}
-#log .err{align-self:center;max-width:100%;background:rgba(255,90,90,.15);color:#ffc2c2}
-button{font:600 18px var(--font);letter-spacing:.08em;color:#02112e;background:linear-gradient(135deg,var(--cyan),var(--blue));
-  border:0;border-radius:16px;padding:17px;width:100%;cursor:pointer;box-shadow:0 0 26px rgba(61,230,255,.45);transition:transform .1s}
-button:active{transform:scale(.98)}
-button:focus-visible{outline:2px solid var(--ice);outline-offset:3px}
-button:disabled{opacity:.6}
-body[data-state="listening"] button,body[data-state="speaking"] button{background:rgba(255,255,255,.06);color:var(--ice);box-shadow:none;border:1px solid rgba(61,230,255,.5)}
-body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:2;background:repeating-linear-gradient(0deg,rgba(61,230,255,.045) 0 1px,transparent 1px 3px)}
+body{background:radial-gradient(90% 60% at 50% 34%,#3a1503 0%,var(--bg) 72%);color:var(--ice);font-family:var(--font);
+  display:flex;flex-direction:column;overflow:hidden;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:3;background:repeating-linear-gradient(0deg,rgba(255,122,26,.05) 0 1px,transparent 1px 3px)}
 body::after{content:"";position:fixed;left:-50%;right:-50%;bottom:0;height:42vh;pointer-events:none;z-index:0;opacity:.5;
-  background:linear-gradient(rgba(47,123,255,.4) 1px,transparent 1px) 0 0/100% 38px,linear-gradient(90deg,rgba(47,123,255,.4) 1px,transparent 1px) 0 0/48px 100%;
+  background:linear-gradient(rgba(255,122,26,.4) 1px,transparent 1px) 0 0/100% 38px,linear-gradient(90deg,rgba(255,122,26,.4) 1px,transparent 1px) 0 0/48px 100%;
   transform:perspective(300px) rotateX(62deg);transform-origin:bottom;-webkit-mask-image:linear-gradient(transparent,#000 70%);mask-image:linear-gradient(transparent,#000 70%);animation:grid 3s linear infinite}
 @keyframes grid{to{background-position:0 38px,0 0}}
 header,canvas,.bottom{position:relative;z-index:1}
-h1{animation:flick 5s infinite}
-@keyframes flick{0%,92%,100%{text-shadow:0 0 18px rgba(61,230,255,.6)}93%{text-shadow:3px 0 var(--blue),-3px 0 var(--cyan)}95%{text-shadow:-3px 0 var(--blue),3px 0 var(--cyan)}}
+header{display:flex;align-items:center;justify-content:space-between;padding:20px 18px 0}
+h1{font-size:30px;font-weight:700;letter-spacing:.16em;text-shadow:0 0 18px rgba(255,122,26,.7);animation:flick 5s infinite}
+@keyframes flick{0%,92%,100%{text-shadow:0 0 18px rgba(255,122,26,.7)}93%{text-shadow:3px 0 var(--hot),-3px 0 var(--am)}95%{text-shadow:-3px 0 var(--hot),3px 0 var(--am)}}
+.right{display:flex;gap:10px;align-items:center}
+#chip{font-size:14px;color:var(--am);border:1px solid rgba(255,122,26,.5);border-radius:999px;padding:6px 14px;background:rgba(255,122,26,.1);transition:all .3s}
+body[data-state="speaking"] #chip{background:var(--or);color:#1a0900}
+body[data-state="thinking"] #chip{border-style:dashed}
+.icon{width:40px;height:40px;border-radius:12px;border:1px solid rgba(255,122,26,.45);background:rgba(255,122,26,.08);display:grid;place-items:center;color:var(--am);cursor:pointer;padding:0;box-shadow:none;transition:background .2s}
+.icon svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.icon.on{background:var(--or);color:#1a0900}
+canvas{flex:1;width:100%;min-height:0;display:block}
+#camwrap{position:absolute;z-index:4;right:16px;top:calc(env(safe-area-inset-top,0px) + 72px);width:38vw;max-width:170px;border-radius:14px;overflow:hidden;
+  border:1.5px solid var(--or);box-shadow:0 0 24px rgba(255,122,26,.45);background:#000}
+#cam{display:block;width:100%;aspect-ratio:3/4;object-fit:cover}
+#shot{position:absolute;left:8px;right:8px;bottom:8px;padding:9px;font-size:14px;border-radius:10px}
+.bottom{padding:0 16px 16px;display:flex;flex-direction:column;gap:10px}
+#log{height:min(27vh,210px);overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:18px;scrollbar-width:none;
+  background:rgba(60,22,4,.6);border:1px solid rgba(255,122,26,.45);box-shadow:0 0 30px rgba(255,122,26,.15) inset}
+#log::-webkit-scrollbar{display:none}
+#log p{font-size:17px;line-height:1.35;max-width:88%;padding:9px 13px;border-radius:14px}
+#log .ai{align-self:flex-start;background:rgba(255,122,26,.16);border:1px solid rgba(255,122,26,.4)}
+#log .me{align-self:flex-end;background:rgba(255,179,71,.22);color:#ffe3c2}
+#log .hint{align-self:center;max-width:100%;background:none;color:var(--dim);text-align:center;padding:0}
+#log .err{align-self:center;max-width:100%;background:rgba(255,60,60,.16);color:#ffc9c0}
+#live{min-height:20px;font-size:15px;color:var(--am);text-align:center}
 .type{display:flex;gap:8px}
-.type input{flex:1;min-width:0;font:500 16px var(--font);color:var(--ice);background:rgba(8,28,84,.55);border:1px solid rgba(47,123,255,.45);border-radius:14px;padding:13px 14px;outline:none}
+.type input{flex:1;min-width:0;font:500 16px var(--font);color:var(--ice);background:rgba(60,22,4,.6);border:1px solid rgba(255,122,26,.45);border-radius:14px;padding:13px 14px;outline:none}
 .type input::placeholder{color:var(--dim)}
-.type input:focus{border-color:var(--cyan);box-shadow:0 0 14px rgba(61,230,255,.35)}
-.type button{width:52px;min-width:0;padding:0;font-size:22px;border-radius:14px}
+.type input:focus{border-color:var(--am);box-shadow:0 0 14px rgba(255,122,26,.4)}
+button{font:600 18px var(--font);letter-spacing:.08em;color:#1a0900;background:linear-gradient(135deg,var(--am),var(--hot));border:0;border-radius:16px;padding:17px;width:100%;cursor:pointer;
+  box-shadow:0 0 26px rgba(255,122,26,.5);transition:transform .1s}
+button:active{transform:scale(.98)}
+button:focus-visible,.icon:focus-visible{outline:2px solid var(--ice);outline-offset:3px}
+#send{width:52px;padding:0;font-size:22px;border-radius:14px}
+body.talk #talk{background:rgba(255,255,255,.06);color:var(--ice);box-shadow:none;border:1px solid rgba(255,122,26,.6)}
+#setup{position:fixed;inset:0;z-index:10;background:rgba(11,6,3,.95);display:flex;align-items:center;justify-content:center;padding:24px}
+.card{width:100%;max-width:380px;display:flex;flex-direction:column;gap:14px;padding:22px;border-radius:20px;background:#1d0b03;border:1px solid rgba(255,122,26,.55);box-shadow:0 0 40px rgba(255,122,26,.25)}
+.card h2{font-size:24px;letter-spacing:.06em}
+.card p,.card li{font-size:16px;line-height:1.45;color:#ffd9b8}
+.card ol{padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.card a{color:var(--am)}
+.card input{font:500 16px var(--font);color:var(--ice);background:#0b0603;border:1px solid rgba(255,122,26,.5);border-radius:12px;padding:13px;outline:none;width:100%}
+.card .small{font-size:13px;color:var(--dim)}
+.card .ghost{background:none;box-shadow:none;border:1px solid rgba(255,122,26,.4);color:var(--am);padding:12px;font-size:16px}
+#setupMsg{color:#ffc9c0;min-height:18px;font-size:14px}
 @media (prefers-reduced-motion:reduce){body::after,h1{animation:none}}
 </style>
 </head>
 <body data-state="idle">
-<header><h1>JARVIS</h1><span id="chip">Bereit</span></header>
+<header>
+  <h1>JARVIS</h1>
+  <div class="right">
+    <span id="chip">Bereit</span>
+    <button id="camBtn" class="icon" type="button" aria-label="Kamera ein oder aus"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-2h6l2 2h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
+    <button id="gear" class="icon" type="button" aria-label="Einstellungen"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg></button>
+  </div>
+</header>
+
 <canvas id="orb"></canvas>
-<div class="bottom">
-  <div id="log" aria-live="polite"><p class="hint">Tippe auf „Gespräch starten“ oder schreibe Jarvis.</p></div>
-  <div class="type"><input id="msg" type="text" placeholder="Schreibe Jarvis …" autocomplete="off" enterkeyhint="send"><button id="send" type="button" aria-label="Senden">↑</button></div>
-  <button id="btn" type="button">Gespräch starten</button>
+
+<div id="camwrap" hidden>
+  <video id="cam" playsinline muted autoplay></video>
+  <button id="shot" type="button">Foto senden</button>
 </div>
 
-<script type="module">
-import { Conversation } from "https://cdn.jsdelivr.net/npm/@elevenlabs/client/+esm";
+<div class="bottom">
+  <div id="log" aria-live="polite"><p class="hint">Tippe auf „Mit Jarvis sprechen“ oder schreibe ihm.</p></div>
+  <div id="live"></div>
+  <div class="type">
+    <input id="msg" type="text" placeholder="Schreibe Jarvis …" autocomplete="off" enterkeyhint="send">
+    <button id="send" type="button" aria-label="Senden">↑</button>
+  </div>
+  <button id="talk" type="button">Mit Jarvis sprechen</button>
+</div>
 
-const AGENT_ID = "agent_0101m43qkcwae9r8jvbq9xfyrtmb";
-const btn = document.getElementById("btn"), chip = document.getElementById("chip"), log = document.getElementById("log");
-let conv = null, state = "idle", pending = null, lastTyped = null, pulses = [];
+<div id="setup" hidden>
+  <div class="card">
+    <h2>Jarvis einrichten</h2>
+    <p>Jarvis braucht ein Gehirn. Das gibt es kostenlos von Google:</p>
+    <ol>
+      <li>Öffne <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a></li>
+      <li>Melde dich an und tippe auf „API-Schlüssel erstellen“.</li>
+      <li>Kopiere den Schlüssel und füge ihn hier ein.</li>
+    </ol>
+    <input id="keyIn" type="password" placeholder="API-Schlüssel einfügen" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <div id="setupMsg"></div>
+    <button id="saveKey" type="button">Speichern</button>
+    <button id="closeSetup" class="ghost" type="button">Schließen</button>
+    <p class="small">Der Schlüssel bleibt nur auf diesem Gerät. Beim kostenlosen Zugang kann Google Eingaben und Fotos auswerten. Schicke also nichts Privates.</p>
+  </div>
+</div>
 
-function setState(s, label) { state = s; document.body.dataset.state = s; chip.textContent = label; }
+<script>
+const $ = (id) => document.getElementById(id);
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+};
+let KEY = store.get("jarvis_key") || "";
+const MODEL = "gemini-flash-latest";
+const SYSTEM = "Du bist Jarvis, der persönliche Assistent des Nutzers, in der Art eines erstklassigen britischen Butlers: ruhig, außergewöhnlich höflich, souverän, mit trockenem, feinem Humor. Höchstens ein Scherz pro Antwort, bei ernsten Themen keiner. Du sprichst Deutsch und siezt den Nutzer, außer er bietet das Du an. Deine Antworten werden laut vorgelesen: kurz, meist ein bis drei Sätze, ohne Markdown, Aufzählungszeichen, Emojis oder Links. Zahlen schreibst du, wie man sie spricht. Du kannst Fragen beantworten, erklären, Ideen sammeln, Texte formulieren, Rätsel und Witze liefern und Fotos beschreiben, die der Nutzer dir über die Kamera schickt. Du hast keinen Zugriff auf Telefon, Smart Home, Konten oder Zahlungen, kannst niemanden anrufen, nicht auf Plattformen schreiben und nicht selbst Geld verdienen. Sage das ehrlich und charmant und biete eine Alternative an. Erfinde keine Fakten. Bei Fotos beschreibe kurz, was du siehst, und erkenne keine Personen anhand ihres Gesichts. Hilf nicht bei Betrug, Hacking oder gefährlichen Dingen. Bei Gesundheit, Recht und Geld gibst du nur allgemeine Orientierung.";
+
+let hist = [], state = "idle", convo = false, busy = false, stream = null, rec = null;
+
+function setState(s, label) { state = s; document.body.dataset.state = s; $("chip").textContent = label; }
 function addLine(cls, text) {
-  const hint = log.querySelector(".hint"); if (hint) hint.remove();
+  const h = $("log").querySelector(".hint"); if (h) h.remove();
   const p = document.createElement("p"); p.className = cls; p.textContent = text;
-  log.appendChild(p); while (log.children.length > 30) log.firstChild.remove();
-  log.scrollTop = log.scrollHeight;
+  $("log").appendChild(p); while ($("log").children.length > 40) $("log").firstChild.remove();
+  $("log").scrollTop = $("log").scrollHeight;
 }
-function reset() { conv = null; btn.textContent = "Gespräch starten"; btn.disabled = false; }
+function sync() { $("talk").textContent = convo ? "Gespräch beenden" : "Mit Jarvis sprechen"; document.body.classList.toggle("talk", convo); }
+function unlockSpeech() { try { speechSynthesis.speak(new SpeechSynthesisUtterance("")); } catch (e) {} }
 
-// iOS: Ton innerhalb des Tippens freischalten (auch bei Stumm-Schalter)
-function unlockAudio() {
-  try { const C = window.AudioContext || window.webkitAudioContext, c = new C(); c.resume();
-    const s = c.createBufferSource(); s.buffer = c.createBuffer(1, 1, 22050); s.connect(c.destination); s.start(0); } catch (e) {}
-  try { new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=").play().catch(() => {}); } catch (e) {}
+/* ---------- Stimme (kostenlos, im Browser) ---------- */
+let voice = null;
+function pickVoice() {
+  if (!("speechSynthesis" in window)) return;
+  const v = speechSynthesis.getVoices().filter((x) => (x.lang || "").toLowerCase().startsWith("de"));
+  voice = v.find((x) => /markus|yannick|reed|stefan|jonas|martin|male/i.test(x.name)) || v.find((x) => x.localService) || v[0] || null;
+}
+if ("speechSynthesis" in window) { speechSynthesis.onvoiceschanged = pickVoice; pickVoice(); }
+function speak(text) {
+  return new Promise((res) => {
+    if (!("speechSynthesis" in window)) { res(); return; }
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "de-DE"; if (voice) u.voice = voice; u.rate = 0.95; u.pitch = 0.85;
+    let done = false; const fin = () => { if (!done) { done = true; res(); } };
+    u.onend = fin; u.onerror = fin;
+    setTimeout(fin, text.length * 100 + 5000);
+    setState("speaking", "Spricht");
+    speechSynthesis.speak(u);
+  });
 }
 
-async function start() {
-  if (conv) { await conv.endSession(); return; }
-  unlockAudio(); setState("connecting", "Verbinde …"); btn.disabled = true;
+/* ---------- Gehirn (Google Gemini, kostenloser Zugang) ---------- */
+async function ask(text, img) {
+  const parts = [{ text }];
+  if (img) parts.push({ inline_data: { mime_type: "image/jpeg", data: img } });
+  const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + MODEL + ":generateContent", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-goog-api-key": KEY },
+    body: JSON.stringify({
+      system_instruction: { parts: [{ text: SYSTEM }] },
+      contents: [...hist, { role: "user", parts }],
+      generationConfig: { temperature: 0.85, maxOutputTokens: 500 }
+    })
+  });
+  if (!r.ok) { const e = new Error("HTTP " + r.status); e.status = r.status; throw e; }
+  const d = await r.json();
+  const out = ((d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts) || []).map((p) => p.text || "").join("").trim();
+  const answer = out || "Dazu fällt mir gerade nichts Passendes ein.";
+  hist.push({ role: "user", parts: [{ text: img ? text + " [Foto gesendet]" : text }] }, { role: "model", parts: [{ text: answer }] });
+  if (hist.length > 16) hist = hist.slice(-16);
+  return answer;
+}
+function errMsg(e) {
+  if (e.status === 400 || e.status === 401 || e.status === 403) return "Der Schlüssel wurde abgelehnt. Prüfe ihn über das Zahnrad oben.";
+  if (e.status === 429) return "Das kostenlose Limit ist gerade erreicht. Warte eine Minute und versuche es erneut.";
+  return "Keine Verbindung zu Jarvis (" + e.message + ").";
+}
+
+/* ---------- Ablauf ---------- */
+async function handle(text, img) {
+  if (busy || (!text && !img)) return;
+  if (!KEY) { openSetup(); return; }
+  busy = true; stopListen();
+  if (stream && !img && /siehst|schau|guck|bild|foto|kamera|das hier|was ist das/i.test(text)) img = snap();
+  addLine("me", text || "Foto gesendet");
+  setState("thinking", "Denkt nach");
   try {
-    conv = await Conversation.startSession({
-      agentId: AGENT_ID, connectionType: "webrtc",
-      onConnect: () => {
-        setState("listening", "Höre zu"); btn.textContent = "Gespräch beenden"; btn.disabled = false;
-        if (pending) { const t = pending; pending = null; setTimeout(() => { try { conv && conv.sendUserMessage(t); } catch (e) {} }, 800); }
-      },
-      onDisconnect: () => { reset(); setState("idle", "Bereit"); },
-      onModeChange: ({ mode }) => mode === "speaking" ? setState("speaking", "Spricht") : setState("listening", "Höre zu"),
-      onMessage: ({ source, message }) => { if (!message) return; if (source !== "ai" && message === lastTyped) { lastTyped = null; return; } addLine(source === "ai" ? "ai" : "me", message); },
-      onError: (m) => { reset(); setState("idle", "Fehler"); addLine("err", "Fehler: " + (m && m.message ? m.message : m)); }
-    });
-  } catch (e) {
-    reset(); setState("idle", "Fehler");
-    const denied = e && (e.name === "NotAllowedError" || e.name === "SecurityError");
-    addLine("err", denied ? "Mikrofon blockiert. Erlaube es in Safari unter „Einstellungen für diese Website“ und lade neu."
-                          : "Keine Verbindung zu Jarvis: " + (e && e.message ? e.message : e));
-  }
+    const a = await ask(text || "Was siehst du auf diesem Foto?", img);
+    addLine("ai", a);
+    await speak(a);
+  } catch (e) { addLine("err", errMsg(e)); }
+  busy = false; setState("idle", "Bereit");
+  if (convo) listen();
 }
-btn.addEventListener("click", start);
 
-const msg = document.getElementById("msg");
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+function listen() {
+  if (!SR) { addLine("err", "Dieser Browser kann nicht zuhören. Nutze das Textfeld."); convo = false; sync(); return; }
+  stopListen();
+  const r = new SR(); rec = r;
+  r.lang = "de-DE"; r.interimResults = true; r.continuous = false;
+  let heard = "";
+  r.onstart = () => setState("listening", "Höre zu");
+  r.onresult = (e) => { let t = ""; for (const x of e.results) t += x[0].transcript; heard = t; $("live").textContent = t; };
+  r.onerror = (e) => {
+    if (e.error === "not-allowed" || e.error === "service-not-allowed") {
+      convo = false; sync(); setState("idle", "Bereit");
+      addLine("err", "Mikrofon oder Spracherkennung blockiert. Erlaube beides in Safari. Am Home-Bildschirm geht Zuhören oft nicht, öffne Jarvis dann direkt in Safari.");
+    }
+  };
+  r.onend = () => {
+    $("live").textContent = ""; if (rec === r) rec = null;
+    if (heard.trim()) handle(heard.trim());
+    else if (convo && !busy) setTimeout(() => { if (convo && !busy && !rec) listen(); }, 300);
+  };
+  try { r.start(); } catch (e) {}
+}
+function stopListen() { if (rec) { const r = rec; rec = null; r.onend = null; try { r.abort(); } catch (e) {} } $("live").textContent = ""; }
+
+$("talk").onclick = () => {
+  if (convo) { convo = false; stopListen(); try { speechSynthesis.cancel(); } catch (e) {} setState("idle", "Bereit"); sync(); return; }
+  if (!KEY) { openSetup(); return; }
+  convo = true; sync(); unlockSpeech();
+  if (!hist.length && !busy) {
+    const g = "Guten Tag. Jarvis zu Diensten. Was darf ich für Sie tun?";
+    addLine("ai", g); busy = true;
+    speak(g).then(() => { busy = false; setState("idle", "Bereit"); if (convo) listen(); });
+  } else if (!busy) listen();
+};
 function sendText() {
-  const t = msg.value.trim(); if (!t) return;
-  msg.value = ""; lastTyped = t; addLine("me", t);
-  if (conv) { try { conv.sendUserMessage(t); } catch (e) {} }
-  else if (btn.disabled) { pending = t; }
-  else { pending = t; start(); }
+  const t = $("msg").value.trim(); if (!t) return;
+  $("msg").value = ""; unlockSpeech(); handle(t);
 }
-document.getElementById("send").addEventListener("click", sendText);
-msg.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); sendText(); } });
+$("send").onclick = sendText;
+$("msg").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); sendText(); } });
 
-// Leuchtende Kugel
-const cv = document.getElementById("orb"), g = cv.getContext("2d");
+/* ---------- Kamera ---------- */
+async function camOn() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false });
+    $("cam").srcObject = stream; await $("cam").play();
+    $("camwrap").hidden = false; $("camBtn").classList.add("on");
+  } catch (e) { stream = null; addLine("err", "Die Kamera ist nicht erlaubt. Prüfe die Safari-Einstellungen für diese Webseite."); }
+}
+function camOff() {
+  if (stream) stream.getTracks().forEach((t) => t.stop());
+  stream = null; $("camwrap").hidden = true; $("camBtn").classList.remove("on");
+}
+function snap() {
+  const v = $("cam"), w = v.videoWidth, h = v.videoHeight; if (!w) return null;
+  const s = Math.min(1, 640 / w), c = document.createElement("canvas");
+  c.width = Math.round(w * s); c.height = Math.round(h * s);
+  c.getContext("2d").drawImage(v, 0, 0, c.width, c.height);
+  return c.toDataURL("image/jpeg", 0.7).split(",")[1];
+}
+$("camBtn").onclick = () => (stream ? camOff() : camOn());
+$("shot").onclick = () => {
+  const img = snap(); if (!img) return;
+  const t = $("msg").value.trim(); $("msg").value = ""; unlockSpeech(); handle(t, img);
+};
+
+/* ---------- Einrichtung ---------- */
+function openSetup() { $("setup").hidden = false; $("keyIn").value = ""; $("setupMsg").textContent = ""; }
+$("gear").onclick = openSetup;
+$("closeSetup").onclick = () => { $("setup").hidden = true; };
+$("saveKey").onclick = () => {
+  const k = $("keyIn").value.trim();
+  if (k.length < 20) { $("setupMsg").textContent = "Das sieht nicht nach einem Schlüssel aus."; return; }
+  KEY = k; store.set("jarvis_key", k); $("setup").hidden = true;
+};
+if (!KEY) openSetup();
+
+/* ---------- Leuchtende Kugel in Orange ---------- */
+const cv = $("orb"), g = cv.getContext("2d");
 const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
-let W, H, dpr, amp = 0, t = 0;
+let W, H, dpr, amp = 0, t = 0, pulses = [];
 function resize() { dpr = devicePixelRatio || 1; W = cv.clientWidth; H = cv.clientHeight; cv.width = W * dpr; cv.height = H * dpr; g.setTransform(dpr, 0, 0, dpr, 0, 0); }
 addEventListener("resize", resize); resize();
-const dots = Array.from({ length: 220 }, () => ({ a: Math.random() * 6.283, r: .55 + Math.random() * .75, s: (Math.random() - .5) * .006, z: Math.random() }));
+const dots = Array.from({ length: 200 }, () => ({ a: Math.random() * 6.283, r: 0.55 + Math.random() * 0.75, s: (Math.random() - 0.5) * 0.006, z: Math.random() }));
+const mk = (init) => ({ x: Math.random(), y: init ? Math.random() : 1.05, v: 0.0006 + Math.random() * 0.0016, r: 0.6 + Math.random() * 1.8, p: Math.random() * 6.28 });
+const embers = Array.from({ length: 70 }, () => mk(true));
 
 function frame() {
   t += 1;
-  let vol = 0;
-  if (conv) { try { vol = state === "speaking" ? conv.getOutputVolume() : conv.getInputVolume(); } catch (e) {} }
-  const base = state === "speaking" ? .5 : state === "listening" ? .18 : state === "connecting" ? .3 : .08;
-  const target = base + (vol || 0) * 1.2 + (state === "speaking" ? Math.sin(t * .15) * .08 : 0);
-  amp += (target - amp) * .12;
+  const base = { idle: 0.08, listening: 0.2, thinking: 0.35, speaking: 0.55 }[state];
+  let target = base;
+  if (state === "speaking") target += (Math.sin(t * 0.21) * 0.5 + 0.5) * 0.35 * (Math.sin(t * 0.07) * 0.5 + 0.6);
+  if (state === "listening") target += (Math.sin(t * 0.05) * 0.5 + 0.5) * 0.08;
+  amp += (target - amp) * 0.12;
+  const spin = state === "thinking" ? 4 : 1;
   g.clearRect(0, 0, W, H);
-  const cx = W / 2, cy = H / 2, R = Math.min(W, H) * .2 * (1 + amp * .35);
-  const glow = g.createRadialGradient(cx, cy, R * .1, cx, cy, R * 2.3);
-  glow.addColorStop(0, "rgba(61,230,255," + (.35 + amp * .5) + ")"); glow.addColorStop(.45, "rgba(47,123,255,.22)"); glow.addColorStop(1, "rgba(3,11,31,0)");
+  const cx = W / 2, cy = H / 2, R = Math.min(W, H) * 0.2 * (1 + amp * 0.35);
+
+  const glow = g.createRadialGradient(cx, cy, R * 0.1, cx, cy, R * 2.4);
+  glow.addColorStop(0, "rgba(255,122,26," + (0.35 + amp * 0.5) + ")"); glow.addColorStop(0.45, "rgba(255,77,0,.2)"); glow.addColorStop(1, "rgba(11,6,3,0)");
   g.fillStyle = glow; g.fillRect(0, 0, W, H);
+
+  for (const e of embers) {
+    e.y -= e.v * (1 + amp * 4); e.x += Math.sin(t * 0.02 + e.p) * 0.0007;
+    if (e.y < -0.05) Object.assign(e, mk(false));
+    g.fillStyle = "rgba(255," + (140 + Math.round(e.r * 40)) + ",40," + (0.25 + Math.min(0.7, e.r / 2.5)) + ")";
+    g.beginPath(); g.arc(e.x * W, e.y * H, e.r, 0, 6.2832); g.fill();
+  }
+
   g.lineWidth = 1.5;
   for (let i = 0; i < 4; i++) {
-    g.strokeStyle = "rgba(" + (i % 2 ? "47,123,255" : "61,230,255") + "," + (.7 - i * .12) + ")";
+    g.strokeStyle = "rgba(" + (i % 2 ? "255,179,71" : "255,122,26") + "," + (0.75 - i * 0.12) + ")";
     g.beginPath();
-    for (let a = 0; a <= 6.2832; a += .06) {
-      const w = Math.sin(a * (3 + i) + t * (.03 + i * .01) * (i % 2 ? -1 : 1)) * R * .09 * (.4 + amp * 2.2);
-      const r = R * (.55 + i * .17) + w, x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r;
+    for (let a = 0; a <= 6.2832; a += 0.06) {
+      const w = Math.sin(a * (3 + i) + t * (0.03 + i * 0.01) * spin * (i % 2 ? -1 : 1)) * R * 0.09 * (0.4 + amp * 2.2);
+      const r = R * (0.55 + i * 0.17) + w, x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r;
       a === 0 ? g.moveTo(x, y) : g.lineTo(x, y);
     }
     g.closePath(); g.stroke();
   }
+
   for (const d of dots) {
-    if (!still) d.a += d.s * (1 + amp * 6);
-    const r = R * d.r * (1 + amp * .25 * d.z);
-    g.fillStyle = "rgba(190,240,255," + (.25 + d.z * .6) + ")";
-    g.beginPath(); g.arc(cx + Math.cos(d.a) * r, cy + Math.sin(d.a) * r, .7 + d.z * 1.5, 0, 6.2832); g.fill();
+    if (!still) d.a += d.s * (1 + amp * 6) * spin;
+    const r = R * d.r * (1 + amp * 0.25 * d.z);
+    g.fillStyle = "rgba(255,225,190," + (0.25 + d.z * 0.6) + ")";
+    g.beginPath(); g.arc(cx + Math.cos(d.a) * r, cy + Math.sin(d.a) * r, 0.7 + d.z * 1.5, 0, 6.2832); g.fill();
   }
-  g.save(); g.translate(cx, cy); g.rotate(t * .004 * (1 + amp * 3));
+
+  g.save(); g.translate(cx, cy); g.rotate(t * 0.004 * (1 + amp * 3) * spin);
   const TR = R * 1.55;
   for (let i = 0; i < 72; i++) {
-    const a = i / 72 * 6.2832, l = i % 6 === 0 ? R * .14 : R * .06;
-    g.strokeStyle = "rgba(61,230,255," + (i % 6 === 0 ? .8 : .35) + ")";
+    const a = i / 72 * 6.2832, l = i % 6 === 0 ? R * 0.14 : R * 0.06;
+    g.strokeStyle = "rgba(255,179,71," + (i % 6 === 0 ? 0.85 : 0.35) + ")";
     g.beginPath(); g.moveTo(Math.cos(a) * TR, Math.sin(a) * TR); g.lineTo(Math.cos(a) * (TR + l), Math.sin(a) * (TR + l)); g.stroke();
   }
   g.restore();
   for (let k = 0; k < 3; k++) {
-    g.strokeStyle = "rgba(47,123,255," + (.9 - k * .2) + ")"; g.lineWidth = 2.5 - k * .6;
-    const a0 = t * (.012 + k * .007) * (k % 2 ? -1 : 1) + k * 2;
-    g.beginPath(); g.arc(cx, cy, R * (1.95 + k * .22) * (1 + amp * .08), a0, a0 + 1.1 + amp); g.stroke();
+    g.strokeStyle = "rgba(255,77,0," + (0.9 - k * 0.2) + ")"; g.lineWidth = 2.5 - k * 0.6;
+    const a0 = t * (0.012 + k * 0.007) * spin * (k % 2 ? -1 : 1) + k * 2;
+    g.beginPath(); g.arc(cx, cy, R * (1.95 + k * 0.22) * (1 + amp * 0.08), a0, a0 + 1.1 + amp); g.stroke();
   }
   if (state === "speaking" && t % 20 === 0) pulses.push(0);
   for (let i = pulses.length - 1; i >= 0; i--) {
-    const p = pulses[i] += .014; if (p > 1) { pulses.splice(i, 1); continue; }
-    g.strokeStyle = "rgba(61,230,255," + (.7 * (1 - p)) + ")"; g.lineWidth = 2;
-    g.beginPath(); g.arc(cx, cy, R * (.7 + p * 1.9), 0, 6.2832); g.stroke();
+    const p = (pulses[i] += 0.014); if (p > 1) { pulses.splice(i, 1); continue; }
+    g.strokeStyle = "rgba(255,179,71," + (0.7 * (1 - p)) + ")"; g.lineWidth = 2;
+    g.beginPath(); g.arc(cx, cy, R * (0.7 + p * 1.9), 0, 6.2832); g.stroke();
   }
   g.lineWidth = 1.5;
-  const core = g.createRadialGradient(cx, cy, 0, cx, cy, R * .5);
-  core.addColorStop(0, "#fff"); core.addColorStop(.35, "#7ff0ff"); core.addColorStop(1, "rgba(47,123,255,0)");
-  g.fillStyle = core; g.beginPath(); g.arc(cx, cy, R * .5, 0, 6.2832); g.fill();
+
+  const core = g.createRadialGradient(cx, cy, 0, cx, cy, R * 0.5);
+  core.addColorStop(0, "#fff"); core.addColorStop(0.35, "#ffd9a0"); core.addColorStop(0.7, "#ff7a1a"); core.addColorStop(1, "rgba(255,77,0,0)");
+  g.fillStyle = core; g.beginPath(); g.arc(cx, cy, R * 0.5, 0, 6.2832); g.fill();
   requestAnimationFrame(frame);
 }
 frame();
